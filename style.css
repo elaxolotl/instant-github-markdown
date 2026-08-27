@@ -21,6 +21,7 @@
 #github-rich-editor pre {
     padding: 16px;
     background: #161b22;
+    color: rgb(230, 230, 230);
     border-radius: 6px;
     overflow-x: auto;
 }

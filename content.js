@@ -12,7 +12,6 @@ setTimeout(() => {
     const richEditor = document.createElement("div");
     richEditor.id = "github-rich-editor";
     richEditor.contentEditable = "true";
-
     richEditor.spellcheck = false;
 
     richEditor.style.cssText = `
@@ -21,8 +20,6 @@ setTimeout(() => {
         padding: 40px;
         box-sizing: border-box;
         overflow-y: auto;
-        background: #0d1117;
-        color: #e6edf3;
         outline: none;
         font-size: 16px;
         line-height: 1.6;
