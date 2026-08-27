@@ -1,0 +1,20 @@
+{
+    "manifest_version": 3,
+    "name": "Instant Github markdown",
+    "version": "1.0.0",
+    "description": "This instantly converts the README text to its markdown preview on github",
+    "content_scripts": [
+        {
+            "matches": [
+                "https://github.com/*/*/edit/*/README.md"
+            ],
+            "js": [
+                "marked.min.js",
+                "content.js"
+            ],
+            "css": [
+                "style.css"
+            ]
+        }
+    ]
+}

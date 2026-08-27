@@ -1,0 +1,40 @@
+@import url('https://fonts.googleapis.com/css2?family=Valley+Sans:ital,wght@0,100..900;1,100..900&display=swap');
+
+#github-rich-editor {
+    font-family: "Valley Sans", sans-serif !important;
+}
+
+#github-rich-editor h1,
+#github-rich-editor h2,
+#github-rich-editor h3 {
+    border-bottom: 1px solid #30363d;
+    padding-bottom: 0.3em;
+    margin-bottom: 1.5em;
+    margin-top: 0.7em;
+}
+
+#github-rich-editor ul,
+#github-rich-editor ol {
+    padding-left: 2em;
+}
+
+#github-rich-editor pre {
+    padding: 16px;
+    background: #161b22;
+    border-radius: 6px;
+    overflow-x: auto;
+}
+
+#github-rich-editor code {
+    font-family: monospace;
+}
+
+#github-rich-editor :not(pre)>code {
+    padding: 0.2em 0.4em;
+    background: #6e768166;
+    border-radius: 6px;
+}
+
+#github-rich-editor img {
+    max-width: 100%;
+}
