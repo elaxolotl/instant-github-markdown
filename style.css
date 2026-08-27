@@ -2,6 +2,13 @@
 
 #github-rich-editor {
     font-family: "Valley Sans", sans-serif !important;
+    width: 100%;
+    padding: 40px;
+    box-sizing: border-box;
+    overflow-y: auto;
+    outline: none;
+    font-size: 16px;
+    line-height: 1.6;
 }
 
 #github-rich-editor h1,

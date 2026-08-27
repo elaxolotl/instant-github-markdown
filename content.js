@@ -8,27 +8,15 @@ setTimeout(() => {
         return;
     }
 
-    // create the rich editor
+    // create rich editor
     const richEditor = document.createElement("div");
     richEditor.id = "github-rich-editor";
     richEditor.contentEditable = "true";
     richEditor.spellcheck = false;
 
-    richEditor.style.cssText = `
-        width: 100%;
-        min-height: 500px;
-        padding: 40px;
-        box-sizing: border-box;
-        overflow-y: auto;
-        outline: none;
-        font-size: 16px;
-        line-height: 1.6;
-    `;
-
     // get whatever content is currently available
     const initialMarkdown = editor.innerText;
 
-    // render it
     richEditor.innerHTML = marked.parse(initialMarkdown);
 
     // replace the github editor
@@ -38,84 +26,105 @@ setTimeout(() => {
     // handle markdown shortcuts
     richEditor.addEventListener("keydown", (e) => {
 
-        if (e.key !== " ") return;
-
         const selection = window.getSelection();
-
         if (!selection.rangeCount) return;
 
         const node = selection.anchorNode;
-
         if (!node || node.nodeType !== Node.TEXT_NODE) return;
 
-        const text = node.textContent;
-        const cursor = selection.anchorOffset;
+        if (e.key === " ") {
+            const text = node.textContent;
+            const cursor = selection.anchorOffset;
+            const beforeCursor = text.slice(0, cursor);
 
-        const beforeCursor = text.slice(0, cursor);
+            // ** / * bold-italic formatting (checked first, so "# " etc still work after)
+            const match = beforeCursor.match(/(\*\*|\*)([^*]+)\1$/);
+            if (match) {
+                e.preventDefault();
 
-        // # heading
-        if (/^#{1,3}$/.test(beforeCursor)) {
-            e.preventDefault();
+                const isBold = match[1] === "**";
+                const content = match[2];
+                const openStart = cursor - match[0].length;
 
-            const level = beforeCursor.length;
-            const heading = document.createElement(`h${level}`);
-            heading.textContent = " ";
+                const element = document.createElement(isBold ? "strong" : "em");
+                element.textContent = content;
 
-            const range = document.createRange();
-            range.selectNodeContents(node);
-            range.deleteContents();
+                const range = document.createRange();
+                range.setStart(node, openStart);
+                range.setEnd(node, cursor);
+                range.deleteContents();
+                range.insertNode(element);
 
-            range.insertNode(heading);
+                const spacer = document.createTextNode("\u00A0");
+                element.after(spacer);
+                range.setStart(spacer, 1);
+                range.collapse(true);
 
-            range.setStart(heading, 1);
-            range.collapse(true);
+                selection.removeAllRanges();
+                selection.addRange(range);
 
-            selection.removeAllRanges();
-            selection.addRange(range);
-        }
+                return; // don't also run heading/list checks below
+            }
 
-        // - bullet list
-        if (beforeCursor === "-") {
-            e.preventDefault();
+            // # heading
+            if (/^#{1,3}$/.test(beforeCursor)) {
+                e.preventDefault();
 
-            const list = document.createElement("ul");
-            const item = document.createElement("li");
+                const level = beforeCursor.length;
+                const heading = document.createElement(`h${level}`);
+                heading.textContent = " ";
 
-            item.innerHTML = "<br>";
-            list.appendChild(item);
+                const range = document.createRange();
+                range.selectNodeContents(node);
+                range.deleteContents();
+                range.insertNode(heading);
 
-            node.textContent = "";
+                range.setStart(heading, 1);
+                range.collapse(true);
 
-            node.parentElement?.appendChild(list);
+                selection.removeAllRanges();
+                selection.addRange(range);
+            }
 
-            const range = document.createRange();
-            range.selectNodeContents(item);
-            range.collapse(true);
+            // - bullet list
+            if (beforeCursor === "-" || beforeCursor === "+") {
+                e.preventDefault();
 
-            selection.removeAllRanges();
-            selection.addRange(range);
-        }
+                const list = document.createElement("ul");
+                const item = document.createElement("li");
+                item.innerHTML = "<br>";
+                list.appendChild(item);
 
-        // 1. numbered list
-        if (/^\d+\.$/.test(beforeCursor)) {
-            e.preventDefault();
+                node.textContent = "";
+                node.parentElement?.appendChild(list);
 
-            const list = document.createElement("ol");
-            const item = document.createElement("li");
+                const range = document.createRange();
+                range.selectNodeContents(item);
+                range.collapse(true);
 
-            item.innerHTML = "<br>";
-            list.appendChild(item);
+                selection.removeAllRanges();
+                selection.addRange(range);
+            }
 
-            node.textContent = "";
+            // 1. numbered list
+            if (/^\d+\.$/.test(beforeCursor)) {
+                e.preventDefault();
 
-            node.parentElement?.appendChild(list);
+                const list = document.createElement("ol");
+                const item = document.createElement("li");
+                item.innerHTML = "<br>";
+                list.appendChild(item);
 
-            const range = document.createRange();
-            range.selectNodeContents(item);
-            range.collapse(true);
+                node.textContent = "";
+                node.parentElement?.appendChild(list);
 
-            selection.removeAllRanges();
-            selection.addRange(range);
+                const range = document.createRange();
+                range.selectNodeContents(item);
+                range.collapse(true);
+
+                selection.removeAllRanges();
+                selection.addRange(range);
+            }
         }
     });
 
