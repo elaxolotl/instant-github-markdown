@@ -1,5 +1,50 @@
 setTimeout(() => {
 
+    // resolve repo asset paths to thier github urls
+    function resolveGithubAssetUrl(imgPath) {
+        if (/^https?:\/\//.test(imgPath)) return imgPath;
+
+        const parts = location.pathname.split("/").filter(Boolean);
+        const [owner, repo, , ...rest] = parts;
+        const branch = rest[0];
+        const currentFilePath = rest.slice(1).join("/");
+
+        let targetPath;
+
+        if (imgPath.startsWith("/")) {
+            targetPath = imgPath.slice(1);
+        } else {
+            const dir = currentFilePath.split("/").slice(0, -1);
+            const segments = [...dir, ...imgPath.split("/")];
+
+            const resolved = [];
+            for (const seg of segments) {
+                if (seg === "." || seg === "") continue;
+                if (seg === "..") resolved.pop();
+                else resolved.push(seg);
+            }
+            targetPath = resolved.join("/");
+        }
+
+        const encodedPath = targetPath.split("/").map(encodeURIComponent).join("/");
+        return `https://github.com/${owner}/${repo}/raw/${branch}/${encodedPath}`;
+    }
+
+    // custom renderer so marked.parse() rewrites image src on the way in
+    const renderer = new marked.Renderer();
+    renderer.image = (...args) => {
+        let href, title, text;
+
+        if (typeof args[0] === "object") {
+            ({ href, title, text } = args[0]);
+        } else {
+            [href, title, text] = args;
+        }
+
+        const resolvedSrc = resolveGithubAssetUrl(href);
+        return `<img src="${resolvedSrc}" alt="${text || ""}" style="max-width: 100%;">`;
+    };
+
     // pull the markdown editor
     const editor = document.querySelector('[data-language="markdown"]');
 
@@ -17,7 +62,7 @@ setTimeout(() => {
     // get whatever content is currently available
     const initialMarkdown = editor.innerText;
 
-    richEditor.innerHTML = marked.parse(initialMarkdown);
+    richEditor.innerHTML = marked.parse(initialMarkdown, { renderer });
 
     // replace the github editor
     editor.style.display = "none";
@@ -37,7 +82,7 @@ setTimeout(() => {
             const cursor = selection.anchorOffset;
             const beforeCursor = text.slice(0, cursor);
 
-            // ** / * bold-italic formatting (checked first, so "# " etc still work after)
+            // ** / * bold-italic formatting
             const match = beforeCursor.match(/(\*\*|\*)([^*]+)\1$/);
             if (match) {
                 e.preventDefault();
@@ -63,7 +108,7 @@ setTimeout(() => {
                 selection.removeAllRanges();
                 selection.addRange(range);
 
-                return; // don't also run heading/list checks below
+                return;
             }
 
             // # heading
