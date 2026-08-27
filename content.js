@@ -1,4 +1,19 @@
-setTimeout(() => {
+setTimeout(async () => {
+
+    //actually fetch readme from repo urls since its not fully loaded in the html
+    async function fetchReadmeMarkdown() {
+        const parts = location.pathname.split("/").filter(Boolean);
+        const [owner, repo, , ...rest] = parts;
+        const branch = rest[0];
+        const filePath = rest.slice(1).map(encodeURIComponent).join("/");
+
+        const url = `https://github.com/${owner}/${repo}/raw/${branch}/${filePath}`;
+
+        const res = await fetch(url, { credentials: "same-origin" });
+        if (!res.ok) throw new Error(`Failed to fetch README: ${res.status}`);
+
+        return res.text();
+    }
 
     // resolve repo asset paths to thier github urls
     function resolveGithubAssetUrl(imgPath) {
@@ -60,8 +75,8 @@ setTimeout(() => {
     richEditor.spellcheck = false;
 
     // get whatever content is currently available
-    const initialMarkdown = editor.innerText;
-
+    const initialMarkdown = await fetchReadmeMarkdown();
+    
     richEditor.innerHTML = marked.parse(initialMarkdown, { renderer });
 
     // replace the github editor
